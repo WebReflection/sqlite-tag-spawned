@@ -62,7 +62,7 @@ const sqlite = (type, bin, args) => (..._) =>
  * plus a `transaction` one that, once invoked, returns also a template literal
  * tag utility with a special `.commit()` method, to execute all queries used
  * within such returned tag function.
- * @param {string} db the database file to create or open
+ * @param {string} db the database file to create or `:memory:` for a temp file
  * @param {SQLiteOptions?} options optional extra options
  * @returns 
  */
