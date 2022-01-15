@@ -92,6 +92,22 @@ const sqlite = (type, bin, args) => (..._) =>
     exec(res, rej, type, bin, args.concat(query));
   });
 
+
+/**
+ * @typedef {object} SQLiteOptions optional options
+ * @property {boolean?} readonly opens the database in readonly mode
+ * @property {string?} bin the sqlite3 executable
+ */
+
+/**
+ * Returns `all`, `get`, `query`, and `raw` template literal tag utilities,
+ * plus a `transaction` one that, once invoked, returns also a template literal
+ * tag utility with a special `.commit()` method, to execute all queries used
+ * within such returned tag function.
+ * @param {string} db the database file to create or open
+ * @param {SQLiteOptions?} options optional extra options
+ * @returns 
+ */
 function SQLiteTag(db, options = {}) {
   const bin = options.bin || 'sqlite3';
 

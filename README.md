@@ -42,3 +42,4 @@ await all`SELECT * FROM names`;
   * requires **SQLite 3.33** or higher (it uses the `-json` output mode)
   * each query is a spawn call except for transactions
   * performance still similar to sqlite3 native module
+  * in `:memory:` database doesn't work because the db *must* be a physical file
