@@ -27,6 +27,7 @@ await all`SELECT * FROM names`;
 
 ### Differently from dblite
 
+  * requires **SQLite 3.33** or higher (it uses the `-json` output mode)
   * each query is a spawn call
   * transactions are not possible due previous point
   * performance still similar to sqlite3 native module
