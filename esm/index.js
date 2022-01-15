@@ -1,4 +1,7 @@
 import {spawn} from 'child_process';
+import {randomUUID} from 'crypto';
+import {tmpdir} from 'os';
+import {join} from 'path';
 
 import {error, raw, sql} from './utils.js';
 
@@ -58,14 +61,16 @@ const sqlite = (type, bin, args) => (..._) =>
  * plus a `transaction` one that, once invoked, returns also a template literal
  * tag utility with a special `.commit()` method, to execute all queries used
  * within such returned tag function.
- * @param {string} db the database file to create or open
+ * @param {string} db the database file to create or `:memory:` for a temp file
  * @param {SQLiteOptions?} options optional extra options
  * @returns 
  */
 export default function SQLiteTag(db, options = {}) {
-  const bin = options.bin || 'sqlite3';
+  if (db === ':memory:')
+    db = join(tmpdir(), randomUUID());
 
-  const args = [db];
+  const bin = options.bin || 'sqlite3';
+  const args = [db, '-bail'];
   if (options.readonly)
     args.push('-readonly');
   
