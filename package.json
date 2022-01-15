@@ -1,6 +1,6 @@
 {
   "name": "sqlite-tag-spawned",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Same as sqlite-tag but without the native sqlite3 module dependency",
   "main": "./cjs/index.js",
   "scripts": {
