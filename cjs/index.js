@@ -1,5 +1,8 @@
 'use strict';
 const {spawn} = require('child_process');
+const {randomUUID} = require('crypto');
+const {tmpdir} = require('os');
+const {join} = require('path');
 
 const {error, raw, sql} = require('./utils.js');
 
@@ -64,9 +67,11 @@ const sqlite = (type, bin, args) => (..._) =>
  * @returns 
  */
 function SQLiteTag(db, options = {}) {
-  const bin = options.bin || 'sqlite3';
+  if (db === ':memory:')
+    db = join(tmpdir(), randomUUID());
 
-  const args = [db];
+  const bin = options.bin || 'sqlite3';
+  const args = [db, '-bail'];
   if (options.readonly)
     args.push('-readonly');
   

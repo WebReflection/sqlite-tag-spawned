@@ -1,4 +1,7 @@
 import {spawn} from 'child_process';
+import {randomUUID} from 'crypto';
+import {tmpdir} from 'os';
+import {join} from 'path';
 
 import {error, raw, sql} from './utils.js';
 
@@ -63,9 +66,11 @@ const sqlite = (type, bin, args) => (..._) =>
  * @returns 
  */
 export default function SQLiteTag(db, options = {}) {
-  const bin = options.bin || 'sqlite3';
+  if (db === ':memory:')
+    db = join(tmpdir(), randomUUID());
 
-  const args = [db];
+  const bin = options.bin || 'sqlite3';
+  const args = [db, '-bail'];
   if (options.readonly)
     args.push('-readonly');
   

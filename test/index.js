@@ -38,12 +38,13 @@ const {all, get, query, raw, transaction} = SQLiteTag('./test/sqlite.db');
   for (let row of rows)
     console.log(' ', row.id + ": " + row.info);
 
-
   const utf8 = '¥ · £ · € · $ · ¢ · ₡ · ₢ · ₣ · ₤ · ₥ · ₦ · ₧ · ₨ · ₩ · ₪ · ₫ · ₭ · ₮ · ₯ · ₹';
   console.log('✔', 'Safe utf8');
   await query`INSERT INTO lorem VALUES (${utf8})`;
   console.assert((await get`SELECT info FROM lorem WHERE info = ${utf8}`).info === utf8);
 
+  console.log('✔', 'Temporary db as :memory:');
+  console.log(' ', await SQLiteTag(':memory:').query`.databases`);
 
   console.log('✔', 'Error handling');
   try {
