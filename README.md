@@ -8,19 +8,28 @@ The same [sqlite-tag](https://github.com/WebReflection/sqlite-tag#readme) ease b
 import SQLiteTagSpawned from 'sqlite-tag-spawned';
 // const SQLiteTagSpawned = require('sqlite-tag-spawned');
 
-const {query, get, all, raw} = SQLiteTagSpawned('./db.sql');
+const {query, get, all, raw, transaction} = SQLiteTagSpawned('./db.sql');
 
+// single query as any info
+console.log(await query`.databases`);
+
+// single query as SQL
 await query`CREATE TABLE IF NOT EXISTS names (
   id INTEGER PRIMARY KEY,
   name TEXT
 )`;
 
+// transaction
+const populate = transaction();
 for (let i = 0; i < 2; i++)
-  await query`INSERT INTO names (name) VALUES (${'Name' + i})`;
+  populate`INSERT INTO names (name) VALUES (${'Name' + i})`;
+await populate.commit();
 
+// get single row (works with LIMIT 1 too, of course)
 await get`SELECT name FROM names`;
 // { name: 'Name0' }
 
+// get all results, if any, or an empty array
 await all`SELECT * FROM names`;
 // [ { id: 1, name: 'Name0' }, { id: 2, name: 'Name1' } ]
 ```
@@ -28,6 +37,5 @@ await all`SELECT * FROM names`;
 ### Differently from dblite
 
   * requires **SQLite 3.33** or higher (it uses the `-json` output mode)
-  * each query is a spawn call
-  * transactions are not possible due previous point
+  * each query is a spawn call except for transactions
   * performance still similar to sqlite3 native module

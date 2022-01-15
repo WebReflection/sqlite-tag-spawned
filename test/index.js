@@ -1,6 +1,6 @@
 import SQLiteTag from '../esm/index.js';
 
-const {all, get, query, raw} = SQLiteTag('./test/sqlite.db');
+const {all, get, query, raw, transaction} = SQLiteTag('./test/sqlite.db');
 
 (async () => {
   console.time('sqlite-tag-spawned');
@@ -9,9 +9,11 @@ const {all, get, query, raw} = SQLiteTag('./test/sqlite.db');
   await query`CREATE TABLE IF NOT EXISTS ${raw`lorem`} (info TEXT)`;
   await query`DELETE FROM lorem`;
 
-  console.log('✔', 'multiple inserts (no statement)');
+  console.log('✔', 'transaction');
+  const insert = transaction();
   for (let i = 0; i < 9; i++)
-    await query`INSERT INTO lorem VALUES (${'Ipsum ' + i})`;
+    insert`INSERT INTO lorem VALUES (${'Ipsum ' + i})`;
+  await insert.commit();
 
   console.log('✔', 'SQL null');
   await query`INSERT INTO lorem VALUES (${null})`;
@@ -46,6 +48,16 @@ const {all, get, query, raw} = SQLiteTag('./test/sqlite.db');
   console.log('✔', 'Error handling');
   try {
     await query`INSERT INTO shenanigans VALUES (1, 2, 3)`;
+  }
+  catch ({message}) {
+    console.log(' ', message);
+  }
+
+  console.log('✔', 'Empty SQL in transaction');
+  try {
+    const empty = transaction();
+    empty``;
+    await empty.commit();
   }
   catch ({message}) {
     console.log(' ', message);
