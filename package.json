@@ -1,0 +1,45 @@
+{
+  "name": "sqlite-tag-spawned",
+  "version": "0.0.0",
+  "description": "Same as sqlite-tag but without the native sqlite3 module dependency",
+  "main": "./cjs/index.js",
+  "scripts": {
+    "build": "npm run cjs && npm run test",
+    "cjs": "ascjs --no-default esm cjs",
+    "test": "c8 node test/index.js",
+    "coverage": "mkdir -p ./coverage; c8 report --reporter=text-lcov > ./coverage/lcov.info"
+  },
+  "keywords": [
+    "sqlite",
+    "sqlite3",
+    "spawn",
+    "lightweight"
+  ],
+  "author": "Andrea Giammarchi",
+  "license": "ISC",
+  "devDependencies": {
+    "ascjs": "^5.0.1",
+    "c8": "^7.11.0"
+  },
+  "module": "./esm/index.js",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./esm/index.js",
+      "default": "./cjs/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "plain-tag": "^0.1.3",
+    "static-params": "^0.2.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WebReflection/sqlite-tag-spawned.git"
+  },
+  "bugs": {
+    "url": "https://github.com/WebReflection/sqlite-tag-spawned/issues"
+  },
+  "homepage": "https://github.com/WebReflection/sqlite-tag-spawned#readme"
+}
