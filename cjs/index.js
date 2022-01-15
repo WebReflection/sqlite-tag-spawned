@@ -1,9 +1,9 @@
 'use strict';
 const {spawn} = require('child_process');
 
-const plain = (m => /* c8 ignore start */ m.__esModule ? m.default : m /* c8 ignore stop */)(require('plain-tag'));
-const {asStatic, asParams} = require('static-params');
+const {error, raw, sql} = require('./utils.js');
 
+const {isArray} = Array;
 const {parse} = JSON;
 const {defineProperty} = Object;
 
@@ -18,8 +18,8 @@ const exec = (res, rej, type, bin, args) => {
       if (type === 'query')
         res(result);
       else {
-        const arr = parse(result);
-        res(type === 'get' ? arr.shift() : arr);
+        const json = parse(result);
+        res(type === 'get' && isArray(json) ? json.shift() : json);
       }
     }
   );
@@ -31,50 +31,6 @@ const exec = (res, rej, type, bin, args) => {
     errored = true;
     error(rej, ''.trim.call(data));
   });
-};
-
-const error = (rej, reason) => {
-  const code = 'SQLITE_ERROR';
-  const error = new Error(code + ': ' + reason);
-  error.code = code;
-  rej(error);
-  return '';
-};
-
-const raw = (..._) => asStatic(plain(..._));
-
-const sql = (rej, _) => {
-  const [template, ...values] = asParams(..._);
-  const sql = [template[0]];
-  for (let i = 0; i < values.length; i++) {
-    const value = values[i];
-    switch (typeof value) {
-      case 'string':
-        sql.push("'" + value.replace(/'/g, "''") + "'");
-        break;
-      case 'number':
-        if (!isFinite(value))
-          return error(rej, 'invalid number ' + value);
-      case 'boolean':
-        sql.push(+value);
-        break;
-      case 'undefined':
-      case 'object':
-        if (!value) {
-          sql.push('NULL');
-          break;
-        }
-        else if (value instanceof Date) {
-          sql.push("'" + value.toISOString() + "'");
-          break;
-        }
-      default:
-        return error(rej, 'incompatible value');
-    }
-    sql.push(template[i + 1]);
-  }
-  const query = sql.join('').trim();
-  return query.length ? query : error(rej, 'empty query');
 };
 
 const sqlite = (type, bin, args) => (..._) =>
@@ -91,7 +47,6 @@ const sqlite = (type, bin, args) => (..._) =>
     }
     exec(res, rej, type, bin, args.concat(query));
   });
-
 
 /**
  * @typedef {object} SQLiteOptions optional options
