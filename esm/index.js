@@ -15,7 +15,8 @@ const exec = (res, rej, type, bin, args, opts) => {
   const {stdout, stderr} = spawn(bin, args, opts).on(
     'close',
     () => {
-      if (errored) return;
+      if (errored)
+        return;
       const result = out.join('').trim();
       if (type === 'query')
         res(result);
@@ -47,20 +48,19 @@ const exec = (res, rej, type, bin, args, opts) => {
  * @param {object} opts spawned options
  * @returns {function}
  */
-const sqlite = (type, bin, args, opts) => (..._) =>
-  new Promise((res, rej) => {
-    let query = sql(rej, _);
-    if (!query.length)
-      return;
-    if (
-      type === 'get' &&
-      /^SELECT\s+/i.test(query) &&
-      !/\s+LIMIT\s+\d+$/i.test(query)
-    ) {
-      query += ' LIMIT 1';
-    }
-    exec(res, rej, type, bin, args.concat(query), opts);
-  });
+const sqlite = (type, bin, args, opts) => (..._) => new Promise((res, rej) => {
+  let query = sql(rej, _);
+  if (!query.length)
+    return;
+  if (
+    type === 'get' &&
+    /^SELECT\s+/i.test(query) &&
+    !/\s+LIMIT\s+\d+$/i.test(query)
+  ) {
+    query += ' LIMIT 1';
+  }
+  exec(res, rej, type, bin, args.concat(query), opts);
+});
 
 /**
  * @typedef {object} SQLiteOptions optional options
