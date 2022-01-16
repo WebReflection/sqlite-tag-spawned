@@ -22,7 +22,7 @@ await query`CREATE TABLE IF NOT EXISTS names (
   name TEXT
 )`;
 
-// transaction
+// transaction (requires .commit() to execute)
 const populate = transaction();
 for (let i = 0; i < 2; i++)
   populate`INSERT INTO names (name) VALUES (${'Name' + i})`;
@@ -42,4 +42,4 @@ await all`SELECT * FROM names`;
   * requires **SQLite 3.33** or higher (it uses the `-json` output mode)
   * each query is a spawn call except for transactions, grouped as single spawned query
   * performance still similar to sqlite3 native module
-  * `:memory:` database is based on a runtime temporary file
+  * `:memory:` database is based on a runtime temporary file and it requires NodeJS 16+

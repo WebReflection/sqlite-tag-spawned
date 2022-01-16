@@ -10,10 +10,10 @@ const {isArray} = Array;
 const {parse} = JSON;
 const {defineProperty} = Object;
 
-const exec = (res, rej, type, bin, args) => {
+const exec = (res, rej, type, bin, args, opts) => {
   const out = [];
 
-  const {stdout, stderr} = spawn(bin, args).on(
+  const {stdout, stderr} = spawn(bin, args, opts).on(
     'close',
     () => {
       if (errored) return;
@@ -36,7 +36,19 @@ const exec = (res, rej, type, bin, args) => {
   });
 };
 
-const sqlite = (type, bin, args) => (..._) =>
+/**
+ * Returns a template literal tag function usable to await `get`, `all`, or
+ * `query` SQL statements. The tag will return a Promise with results.
+ * In case of `all`, an Array is always resolved, if no error occurs, while with
+ * `get` the result or undefined is returned instead. The `query` returns whatever
+ * output the spawned command produced.
+ * @param {string} type the query type
+ * @param {string} bin the sqlite3 executable
+ * @param {string[]} args spawned arguments for sqlite3
+ * @param {object} opts spawned options
+ * @returns {function}
+ */
+const sqlite = (type, bin, args, opts) => (..._) =>
   new Promise((res, rej) => {
     let query = sql(rej, _);
     if (!query.length)
@@ -48,13 +60,14 @@ const sqlite = (type, bin, args) => (..._) =>
     ) {
       query += ' LIMIT 1';
     }
-    exec(res, rej, type, bin, args.concat(query));
+    exec(res, rej, type, bin, args.concat(query), opts);
   });
 
 /**
  * @typedef {object} SQLiteOptions optional options
  * @property {boolean?} readonly opens the database in readonly mode
- * @property {string?} bin the sqlite3 executable
+ * @property {string?} bin the sqlite3 executable path
+ * @property {number?} timeout optional spawn timeout in milliseconds
  */
 
 /**
@@ -76,8 +89,16 @@ function SQLiteTag(db, options = {}) {
     args.push('-readonly');
   
   const json = args.concat('-json');
+  const opts = {};
+  if (options.timeout)
+    opts.timeout = options.timeout;
 
   return {
+    /**
+     * Returns a template literal tag function where all queries part of the
+     * transactions should be written, and awaited through `tag.commit()`.
+     * @returns {function}
+     */
     transaction() {
       const params = [];
       return defineProperty(
@@ -93,14 +114,14 @@ function SQLiteTag(db, options = {}) {
               multi.push(query);
             }
             multi.push('COMMIT');
-            exec(res, rej, 'query', bin, args.concat(multi.join(';')));
+            exec(res, rej, 'query', bin, args.concat(multi.join(';')), opts);
           });
         }}
       );
     },
-    query: sqlite('query', bin, args),
-    get: sqlite('get', bin, json),
-    all: sqlite('all', bin, json),
+    query: sqlite('query', bin, args, opts),
+    get: sqlite('get', bin, json, opts),
+    all: sqlite('all', bin, json, opts),
     raw
   };
 }

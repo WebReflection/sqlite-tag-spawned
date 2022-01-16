@@ -104,7 +104,7 @@ const {all, get, query, raw, transaction} = SQLiteTag('./test/sqlite.db');
     console.log(' ', message);
   }
 
-  const {query: ro} = SQLiteTag('./test/sqlite.db', {readonly: true});
+  const {query: ro} = SQLiteTag('./test/sqlite.db', {readonly: true, timeout: 200});
   console.log('✔', 'Readonly mode');
   try {
     await ro`INSERT INTO lorem VALUES (${'nope'})`;
