@@ -34,7 +34,7 @@ const {all, get, query, raw, transaction} = SQLiteTag('./test/sqlite.db');
 
   console.log('✔', 'Multiple rows');
   const TABLE = 'lorem';
-  const rows = await all`SELECT rowid AS id, info FROM ${raw`${TABLE}`}`;
+  const rows = await all`SELECT rowid AS id, info FROM ${raw`${TABLE}`} LIMIT ${0}, ${20}`;
   for (let row of rows)
     console.log(' ', row.id + ": " + row.info);
 
