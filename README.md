@@ -35,6 +35,10 @@ await get`SELECT name FROM names`;
 // get all results, if any, or an empty array
 await all`SELECT * FROM names`;
 // [ { id: 1, name: 'Name0' }, { id: 2, name: 'Name1' } ]
+
+// use the IN clause through arrays
+const list = ['Name 0', 'Name 1'];
+await all`SELECT * FROM names WHERE name IN (${list})`;
 ```
 
 ### Differently from dblite

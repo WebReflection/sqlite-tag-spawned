@@ -43,6 +43,9 @@ const {all, get, query, raw, transaction} = SQLiteTag('./test/sqlite.db');
   await query`INSERT INTO lorem VALUES (${utf8})`;
   console.assert((await get`SELECT info FROM lorem WHERE info = ${utf8}`).info === utf8);
 
+  console.log('✔', 'IN clause');
+  console.log(' ', await all`SELECT * FROM lorem WHERE info IN (${['Ipsum 2', 'Ipsum 3']})`);
+
   console.log('✔', 'Temporary db as :memory:');
   console.log(' ', await SQLiteTag(':memory:').query`.databases`);
 
