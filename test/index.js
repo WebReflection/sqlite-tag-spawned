@@ -9,6 +9,13 @@ const {all, get, query, raw, transaction} = SQLiteTag('./test/sqlite.db');
   await query`CREATE TABLE IF NOT EXISTS ${raw`lorem`} (info TEXT)`;
   await query`DELETE FROM lorem`;
 
+  console.log('✔', 'getting nothing from DB');
+  console.log(
+    ' ',
+    await get`SELECT * FROM lorem WHERE info=${'test'}` === void 0,
+    (await all`SELECT * FROM lorem WHERE info=${'test'}`).length === 0
+  );
+
   console.log('✔', 'transaction');
   const insert = transaction();
   for (let i = 0; i < 9; i++)
