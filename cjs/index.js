@@ -63,6 +63,8 @@ const sqlite = (type, bin, args, opts) => (..._) => new Promise((res, rej) => {
   exec(res, rej, type, bin, args.concat(query), opts);
 });
 
+let memory = '';
+
 /**
  * @typedef {object} SQLiteOptions optional options
  * @property {boolean?} readonly opens the database in readonly mode
@@ -81,13 +83,13 @@ const sqlite = (type, bin, args, opts) => (..._) => new Promise((res, rej) => {
  */
 function SQLiteTag(db, options = {}) {
   if (db === ':memory:')
-    db = join(tmpdir(), randomUUID());
+    db = memory || (memory = join(tmpdir(), randomUUID()));
 
   const bin = options.bin || 'sqlite3';
   const args = [db, '-bail'];
   if (options.readonly)
     args.push('-readonly');
-  
+
   const json = args.concat('-json');
   const opts = {};
   if (options.timeout)

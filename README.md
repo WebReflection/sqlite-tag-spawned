@@ -46,4 +46,4 @@ await all`SELECT * FROM names WHERE name IN (${list})`;
   * requires **SQLite 3.33** or higher (it uses the `-json` output mode)
   * each query is a spawn call except for transactions, grouped as single spawned query
   * performance still similar to sqlite3 native module
-  * `:memory:` database is based on a runtime temporary file and it requires NodeJS 16+
+  * `:memory:` database is based on an always same, yet runtime-once created temporary file, and it requires NodeJS 16+
