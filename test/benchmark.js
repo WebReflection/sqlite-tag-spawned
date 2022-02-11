@@ -15,6 +15,7 @@ await bench('sqlite3 spawned', () => {
 });
 
 async function bench(title, init) {
+  const bindings = title === 'sqlite3 bindings';
   console.log(`\x1b[1m${title}\x1b[0m`);
   console.time('total');
 
@@ -35,16 +36,22 @@ async function bench(title, init) {
   console.timeEnd('1K inserts (transaction)');
 
   console.time('single select return');
-  const rows = await get`SELECT COUNT(info) AS rows FROM lorem`;
+  let rows = await get`SELECT COUNT(info) AS rows FROM lorem`;
+  if (bindings)
+    rows = JSON.parse(JSON.stringify(rows));
   console.timeEnd('single select return');
 
   const list = ['Ipsum 2', 'Ipsum 3'];
   console.time('multiple select return');
-  await all`SELECT * FROM lorem WHERE info IN (${list})`;
+  let multi = await all`SELECT * FROM lorem WHERE info IN (${list})`;
+  if (bindings)
+    multi = JSON.parse(JSON.stringify(multi));
   console.timeEnd('multiple select return');
 
   console.time('select 1K rows');
-  await all`SELECT * FROM lorem`;
+  let oneK = await all`SELECT * FROM lorem`;
+  if (bindings)
+    oneK = JSON.parse(JSON.stringify(oneK));
   console.timeEnd('select 1K rows');
 
   console.time('table removal');
