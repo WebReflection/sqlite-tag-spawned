@@ -9,7 +9,7 @@ const {isArray} = Array;
 const {parse} = JSON;
 const {defineProperty} = Object;
 
-const exec = (res, rej, type, bin, args, opts) => {
+const defaultExec = (res, rej, type, bin, args, opts) => {
   const out = [];
 
   const {stdout, stderr} = spawn(bin, args, opts).on(
@@ -44,11 +44,12 @@ const exec = (res, rej, type, bin, args, opts) => {
  * output the spawned command produced.
  * @param {string} type the query type
  * @param {string} bin the sqlite3 executable
+ * @param {function} exec the logic to spawn and parse the output
  * @param {string[]} args spawned arguments for sqlite3
  * @param {object} opts spawned options
  * @returns {function}
  */
-const sqlite = (type, bin, args, opts) => (..._) => new Promise((res, rej) => {
+const sqlite = (type, bin, exec, args, opts) => (..._) => new Promise((res, rej) => {
   let query = sql(rej, _);
   if (!query.length)
     return;
@@ -69,6 +70,7 @@ let memory = '';
  * @property {boolean?} readonly opens the database in readonly mode
  * @property {string?} bin the sqlite3 executable path
  * @property {number?} timeout optional spawn timeout in milliseconds
+ * @property {function} [exec=defaultExec] the logic to spawn and parse the output
  */
 
 /**
@@ -84,6 +86,7 @@ export default function SQLiteTag(db, options = {}) {
   if (db === ':memory:')
     db = memory || (memory = join(tmpdir(), randomUUID()));
 
+  const exec = options.exec || defaultExec;
   const bin = options.bin || 'sqlite3';
   const args = [db, '-bail'];
   if (options.readonly)
@@ -120,9 +123,9 @@ export default function SQLiteTag(db, options = {}) {
         }}
       );
     },
-    query: sqlite('query', bin, args, opts),
-    get: sqlite('get', bin, json, opts),
-    all: sqlite('all', bin, json, opts),
+    query: sqlite('query', bin, exec, args, opts),
+    get: sqlite('get', bin, exec, json, opts),
+    all: sqlite('all', bin, exec, json, opts),
     raw
   };
 };
