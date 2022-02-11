@@ -16,7 +16,7 @@ jobs:
 
     steps:
     - name: Build modern SQLite3
-      run: wget https://sqlite.org/2021/sqlite-autoconf-3340100.tar.gz && tar -xvf sqlite-autoconf-3340100.tar.gz && cd sqlite-autoconf-3340100 && ./configure && make && sudo make install && export PATH="/usr/local/lib:$PATH" && sqlite3 --version
+      run: wget https://sqlite.org/2022/sqlite-autoconf-3370200.tar.gz && tar -xvf sqlite-autoconf-3370200.tar.gz && cd sqlite-autoconf-3370200 && ./configure && make && sudo make install && export PATH="/usr/local/lib:$PATH" && sqlite3 --version
     - uses: actions/checkout@v2
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v2
