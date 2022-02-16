@@ -1,6 +1,6 @@
 import SQLiteTag from '../esm/index.js';
 
-const {all, get, query, raw, transaction} = SQLiteTag('./test/sqlite.db');
+const {all, get, query, raw, transaction} = SQLiteTag('./test/sqlite.db', {timeout: 1000});
 
 (async () => {
   console.time('sqlite-tag-spawned');

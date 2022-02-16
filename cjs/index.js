@@ -70,7 +70,7 @@ let memory = '';
  * @typedef {object} SQLiteOptions optional options
  * @property {boolean?} readonly opens the database in readonly mode
  * @property {string?} bin the sqlite3 executable path
- * @property {number?} timeout optional spawn timeout in milliseconds
+ * @property {number?} timeout optional db/spawn timeout in milliseconds
  * @property {function} [exec=defaultExec] the logic to spawn and parse the output
  */
 
@@ -87,16 +87,22 @@ function SQLiteTag(db, options = {}) {
   if (db === ':memory:')
     db = memory || (memory = join(tmpdir(), randomUUID()));
 
+  const timeout = options.timeout || 0;
   const exec = options.exec || defaultExec;
   const bin = options.bin || 'sqlite3';
+
   const args = [db, '-bail'];
+  const opts = {};
+
   if (options.readonly)
     args.push('-readonly');
 
+  if (timeout) {
+    args.push('-cmd', '.timeout ' + timeout);
+    opts.timeout = timeout;
+  }
+
   const json = args.concat('-json');
-  const opts = {};
-  if (options.timeout)
-    opts.timeout = options.timeout;
 
   return {
     /**
