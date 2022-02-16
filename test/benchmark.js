@@ -1,4 +1,5 @@
 import sqlite3 from 'sqlite3';
+import betterSQLite3 from 'better-sqlite3';
 import SQLiteTag from 'sqlite-tag';
 
 import SQLiteTagSpawned from '../esm/index.js';
@@ -10,12 +11,44 @@ await bench('sqlite3 bindings', () => {
 
 await new Promise($ => setTimeout($, 500));
 
+await bench('better-sqlite3 bindings', () => {
+  const db = betterSQLite3('./test/better.db');
+  return {db, ...SQLiteTag({
+    run(sql, params, callback) {
+      try {
+        callback(void 0, db.prepare(sql).run(...params));
+      }
+      catch (error) {
+        callback(error);
+      }
+    },
+    get(sql, params, callback) {
+      try {
+        callback(void 0, db.prepare(sql).get(...params));
+      }
+      catch (error) {
+        callback(error);
+      }
+    },
+    all(sql, params, callback) {
+      try {
+        callback(void 0, db.prepare(sql).all(...params));
+      }
+      catch (error) {
+        callback(error);
+      }
+    }
+  })};
+});
+
+await new Promise($ => setTimeout($, 500));
+
 await bench('sqlite3 spawned', () => {
   return {...SQLiteTagSpawned('./test/spawned.db')};
 });
 
 async function bench(title, init) {
-  const bindings = title === 'sqlite3 bindings';
+  const bindings = title !== 'sqlite3 spawned';
   console.log(`\x1b[1m${title}\x1b[0m`);
   console.time('total');
 
