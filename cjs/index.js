@@ -15,9 +15,13 @@ const defaultExec = (res, rej, type, bin, args, opts) => {
 
   const {stdout, stderr} = spawn(bin, args, opts).on(
     'close',
-    () => {
-      if (errored)
+    code => {
+      if (errored || code !== 0) {
+        if (code !== 0)
+          error(rej, 'busy DB or query too slow');
         return;
+      }
+
       const result = out.join('').trim();
       if (type === 'query')
         res(result);
@@ -92,15 +96,13 @@ function SQLiteTag(db, options = {}) {
   const bin = options.bin || 'sqlite3';
 
   const args = [db, '-bail'];
-  const opts = {};
+  const opts = {timeout};
 
   if (options.readonly)
     args.push('-readonly');
 
-  if (timeout) {
+  if (timeout)
     args.push('-cmd', '.timeout ' + timeout);
-    opts.timeout = timeout;
-  }
 
   const json = args.concat('-json');
 
