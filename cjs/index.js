@@ -64,7 +64,6 @@ const interactiveExec = (bin, db, timeout) => {
       next = next.then(
         () => new Promise(done => {
           let out = '';
-          let error = false;
           const $ = data => {
             out += data;
             let process = false;
@@ -73,30 +72,29 @@ const interactiveExec = (bin, db, timeout) => {
               out = out.slice(0, -UNIQUE_ID_LINE.length);
             }
             if (process) {
+              dropListeners();
+              // this one is funny *but* apparently possible
               while (out.startsWith(UNIQUE_ID_LINE))
                 out = out.slice(UNIQUE_ID_LINE.length);
-              dropListeners();
               if (type === 'query')
                 res(out);
               else {
                 const json = parse(out || '[]');
                 res(type === 'get' ? json.shift() : json);
               }
-              done();
             }
           };
           const _ = data => {
-            error = true;
             dropListeners();
             rej(new Error(data));
-            done();
           };
           const dropListeners = () => {
+            done();
             stdout.removeListener('data', $);
             stderr.removeListener('data', _);
           };
           stdout.on('data', $);
-          stderr.on('data', _);
+          stderr.once('data', _);
           stdin.write(`${args[args.length - 1]};\n`);
           stdin.write(`SELECT '${UNIQUE_ID}' as _;\n`);
         })
