@@ -7,9 +7,6 @@ import {error, raw, sql} from './utils.js';
 
 const UNIQUE_ID = randomUUID();
 const UNIQUE_ID_LINE = `[{"_":"${UNIQUE_ID}"}]\n`;
-const UNIQUE_ID_REGEXP = new RegExp(
-  '^' + UNIQUE_ID_LINE.replace(/[{}[\]]/g, '\\$&')
-);
 
 const {isArray} = Array;
 const {parse} = JSON;

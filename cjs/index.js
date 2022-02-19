@@ -8,9 +8,6 @@ const {error, raw, sql} = require('./utils.js');
 
 const UNIQUE_ID = randomUUID();
 const UNIQUE_ID_LINE = `[{"_":"${UNIQUE_ID}"}]\n`;
-const UNIQUE_ID_REGEXP = new RegExp(
-  '^' + UNIQUE_ID_LINE.replace(/[{}[\]]/g, '\\$&')
-);
 
 const {isArray} = Array;
 const {parse} = JSON;
@@ -74,8 +71,10 @@ const interactiveExec = (bin, db, timeout) => {
             if (process) {
               dropListeners();
               // this one is funny *but* apparently possible
+              /* c8 ignore next 2 */
               while (out.startsWith(UNIQUE_ID_LINE))
                 out = out.slice(UNIQUE_ID_LINE.length);
+
               if (type === 'query')
                 res(out);
               else {
