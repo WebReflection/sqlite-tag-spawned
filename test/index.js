@@ -1,6 +1,6 @@
 import SQLiteTag from '../esm/index.js';
 
-const {all, get, query, raw, transaction} = SQLiteTag('./test/sqlite.db', {timeout: 1000});
+const {all, get, query, raw, transaction, close} = SQLiteTag('./test/sqlite.db', {timeout: 1000});
 
 console.time('sqlite-tag-spawned');
 
@@ -127,5 +127,7 @@ console.log('✔', 'Non SQL query');
 console.log(' ', await ro`.databases`);
 
 console.timeEnd('sqlite-tag-spawned');
+
+close();
 
 import('./persistent.js');

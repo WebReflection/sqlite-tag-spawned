@@ -1,6 +1,6 @@
 import SQLiteTag from '../esm/index.js';
 
-const {all, get, query, close} = SQLiteTag('./test/sqlite.db', {persistent: true, timeout: 1000});
+let {all, get, query, close} = SQLiteTag('./test/sqlite.db', {persistent: true, timeout: 1000});
 
 console.assert(void 0 === await get`SELECT * FROM lorem LIMIT ${0}`);
 
@@ -15,6 +15,11 @@ console.timeEnd('persistent all');
 console.assert('[{"1":1}]' === (await query`SELECT 1`).trim(), 'should be the same');
 
 console.assert(JSON.stringify(rows[0]) === JSON.stringify(row));
+close();
+
+await new Promise($ => setTimeout($));
+
+({all, get, query, close} = SQLiteTag('./test/sqlite.db', {persistent: true}));
 
 try {
   await query`SHENANIGANS`;
