@@ -67,11 +67,14 @@ const interactiveExec = (bin, db, timeout) => {
           let error = false;
           const $ = data => {
             out += data;
-            if (out.endsWith(UNIQUE_ID_LINE)) {
+            let process = false;
+            while (out.endsWith(UNIQUE_ID_LINE)) {
+              process = true;
+              out = out.slice(0, -UNIQUE_ID_LINE.length);
+            }
+            if (process) {
               while (out.startsWith(UNIQUE_ID_LINE))
                 out = out.slice(UNIQUE_ID_LINE.length);
-              while (out.endsWith(UNIQUE_ID_LINE))
-                out = out.slice(0, -UNIQUE_ID_LINE.length);
               dropListeners();
               if (type === 'query')
                 res(out);
