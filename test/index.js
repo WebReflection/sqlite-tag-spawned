@@ -127,3 +127,5 @@ console.log('✔', 'Non SQL query');
 console.log(' ', await ro`.databases`);
 
 console.timeEnd('sqlite-tag-spawned');
+
+import('./persistent.js');

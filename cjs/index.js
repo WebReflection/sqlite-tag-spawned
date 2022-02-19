@@ -6,6 +6,9 @@ const {join} = require('path');
 
 const {error, raw, sql} = require('./utils.js');
 
+const UNIQUE_ID = randomUUID();
+const UNIQUE_ID_LINE = `[{"_":"${UNIQUE_ID}"}]\n`;
+
 const {isArray} = Array;
 const {parse} = JSON;
 const {defineProperty} = Object;
@@ -39,6 +42,52 @@ const defaultExec = (res, rej, type, bin, args, opts) => {
     errored = true;
     error(rej, ''.trim.call(data));
   });
+};
+
+const interactiveExec = (bin, db, timeout) => {
+  const {stdin, stdout, stderr} = spawn(bin, [db]);
+  stdin.write('.mode json\n');
+  if (timeout)
+    stdin.write(`.timeout ${timeout}\n`);
+  let next = Promise.resolve();
+  return (res, rej, type, _, args) => {
+    if (type === 'close') {
+      stdin.write('.quit\n');
+      next = null;
+    }
+    else if (next) {
+      next = next.then(() => {
+        let out = '';
+        let error = false;
+        const $ = data => {
+          out += data;
+          if (out.slice(-UNIQUE_ID_LINE.length) === UNIQUE_ID_LINE) {
+            dropListeners();
+            out = out.slice(0, -UNIQUE_ID_LINE.length).trim();
+            if (type === 'query')
+              res(out);
+            else {
+              const json = parse(out || '[]');
+              res(type === 'get' ? json.shift() : json);
+            }
+          }
+        };
+        const _ = data => {
+          error = true;
+          dropListeners();
+          rej(new Error(data));
+        };
+        const dropListeners = () => {
+          stdout.removeListener('data', $);
+          stderr.removeListener('data', _);
+        };
+        stdout.on('data', $);
+        stderr.on('data', _);
+        stdin.write(`${args[args.length - 1]};\n`);
+        stdin.write(`SELECT '${UNIQUE_ID}' as _;\n`);
+      });
+    }
+  };
 };
 
 /**
@@ -75,6 +124,7 @@ let memory = '';
  * @property {boolean?} readonly opens the database in readonly mode
  * @property {string?} bin the sqlite3 executable path
  * @property {number?} timeout optional db/spawn timeout in milliseconds
+ * @property {boolean} [persistent=false] optional flag to keep the db persistent
  * @property {function} [exec=defaultExec] the logic to spawn and parse the output
  */
 
@@ -92,7 +142,6 @@ function SQLiteTag(db, options = {}) {
     db = memory || (memory = join(tmpdir(), randomUUID()));
 
   const timeout = options.timeout || 0;
-  const exec = options.exec || defaultExec;
   const bin = options.bin || 'sqlite3';
 
   const args = [db, '-bail'];
@@ -105,6 +154,11 @@ function SQLiteTag(db, options = {}) {
     args.push('-cmd', '.timeout ' + timeout);
 
   const json = args.concat('-json');
+  const exec = options.exec || (
+                options.persistent ?
+                  interactiveExec(bin, db, timeout) :
+                  defaultExec
+              );
 
   return {
     /**
@@ -135,6 +189,7 @@ function SQLiteTag(db, options = {}) {
     query: sqlite('query', bin, exec, args, opts),
     get: sqlite('get', bin, exec, json, opts),
     all: sqlite('all', bin, exec, json, opts),
+    close: options.persistent && (() => exec(null, null, 'close')),
     raw
   };
 }

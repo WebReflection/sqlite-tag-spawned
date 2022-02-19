@@ -47,6 +47,13 @@ await bench('sqlite3 spawned', () => {
   return {...SQLiteTagSpawned('./test/spawned.db')};
 });
 
+await new Promise($ => setTimeout($, 500));
+
+await bench('sqlite3 spawned persistent', () => {
+  const db = SQLiteTagSpawned('./test/spawned.db', {persistent: true});
+  return {db, ...db};
+});
+
 async function bench(title, init) {
   const bindings = title !== 'sqlite3 spawned';
   console.log(`\x1b[1m${title}\x1b[0m`);
