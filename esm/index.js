@@ -73,8 +73,10 @@ const interactiveExec = (bin, db, timeout) => {
             if (process) {
               dropListeners();
               // this one is funny *but* apparently possible
+              /* c8 ignore next 2 */
               while (out.startsWith(UNIQUE_ID_LINE))
                 out = out.slice(UNIQUE_ID_LINE.length);
+
               if (type === 'query')
                 res(out);
               else {
