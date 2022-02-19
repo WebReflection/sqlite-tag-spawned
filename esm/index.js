@@ -7,10 +7,15 @@ import {error, raw, sql} from './utils.js';
 
 const UNIQUE_ID = randomUUID();
 const UNIQUE_ID_LINE = `[{"_":"${UNIQUE_ID}"}]\n`;
+const UNIQUE_ID_REGEXP = new RegExp(
+  '^' + UNIQUE_ID_LINE.replace(/[{}[\]]/g, '\\$&')
+);
 
 const {isArray} = Array;
 const {parse} = JSON;
 const {defineProperty} = Object;
+
+const noop = () => {};
 
 const defaultExec = (res, rej, type, bin, args, opts) => {
   const out = [];
@@ -55,36 +60,43 @@ const interactiveExec = (bin, db, timeout) => {
       next = null;
     }
     else if (next) {
-      next = next.then(() => {
-        let out = '';
-        let error = false;
-        const $ = data => {
-          out += data;
-          if (out.slice(-UNIQUE_ID_LINE.length) === UNIQUE_ID_LINE) {
-            dropListeners();
-            out = out.slice(0, -UNIQUE_ID_LINE.length).trim();
-            if (type === 'query')
-              res(out);
-            else {
-              const json = parse(out || '[]');
-              res(type === 'get' ? json.shift() : json);
+      next = next.then(
+        () => new Promise(done => {
+          let out = '';
+          let error = false;
+          const $ = data => {
+            out += data;
+            if (out.endsWith(UNIQUE_ID_LINE)) {
+              while (out.startsWith(UNIQUE_ID_LINE))
+                out = out.slice(UNIQUE_ID_LINE.length);
+              while (out.endsWith(UNIQUE_ID_LINE))
+                out = out.slice(0, -UNIQUE_ID_LINE.length);
+              dropListeners();
+              if (type === 'query')
+                res(out);
+              else {
+                const json = parse(out || '[]');
+                res(type === 'get' ? json.shift() : json);
+              }
+              done();
             }
-          }
-        };
-        const _ = data => {
-          error = true;
-          dropListeners();
-          rej(new Error(data));
-        };
-        const dropListeners = () => {
-          stdout.removeListener('data', $);
-          stderr.removeListener('data', _);
-        };
-        stdout.on('data', $);
-        stderr.on('data', _);
-        stdin.write(`${args[args.length - 1]};\n`);
-        stdin.write(`SELECT '${UNIQUE_ID}' as _;\n`);
-      });
+          };
+          const _ = data => {
+            error = true;
+            dropListeners();
+            rej(new Error(data));
+            done();
+          };
+          const dropListeners = () => {
+            stdout.removeListener('data', $);
+            stderr.removeListener('data', _);
+          };
+          stdout.on('data', $);
+          stderr.on('data', _);
+          stdin.write(`${args[args.length - 1]};\n`);
+          stdin.write(`SELECT '${UNIQUE_ID}' as _;\n`);
+        })
+      );
     }
   };
 };
@@ -188,7 +200,7 @@ export default function SQLiteTag(db, options = {}) {
     query: sqlite('query', bin, exec, args, opts),
     get: sqlite('get', bin, exec, json, opts),
     all: sqlite('all', bin, exec, json, opts),
-    close: options.persistent && (() => exec(null, null, 'close')),
+    close: options.persistent ? (() => exec(null, null, 'close')) : noop,
     raw
   };
 };

@@ -12,7 +12,7 @@ console.time('persistent all');
 const rows = await all`SELECT * FROM lorem`;
 console.timeEnd('persistent all');
 
-console.assert('[{"1":1}]' === await query`SELECT 1`);
+console.assert('[{"1":1}]' === (await query`SELECT 1`).trim(), 'should be the same');
 
 console.assert(JSON.stringify(rows[0]) === JSON.stringify(row));
 
@@ -20,8 +20,13 @@ try {
   await query`SHENANIGANS`;
   console.assert(!'nope');
 }
-catch (o_O) {
-  console.assert(o_O instanceof Error);
+catch ({message}) {
+  console.assert(!!message);
 }
+
+for (let i = 0; i < 10; i++)
+  query`INSERT INTO lorem VALUES (${'Ipsum ' + Math.random()})`;
+
+console.assert((await get`SELECT COUNT(*) AS total FROM lorem`).total === 23);
 
 close();
