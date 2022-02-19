@@ -27,6 +27,6 @@ catch ({message}) {
 for (let i = 0; i < 10; i++)
   query`INSERT INTO lorem VALUES (${'Ipsum ' + Math.random()})`;
 
-console.assert((await get`SELECT COUNT(*) AS total FROM lorem`).total === 23);
+console.log(await get`SELECT COUNT(*) AS total FROM lorem`);
 
 close();
