@@ -1,4 +1,5 @@
 import SQLiteTag from '../esm/index.js';
+import {array2sql, sql2array} from '../esm/utils.js';
 
 const {all, get, query, raw, transaction, close} = SQLiteTag('./test/sqlite.db', {timeout: 1000});
 
@@ -127,6 +128,20 @@ console.log('✔', 'Non SQL query');
 console.log(' ', await ro`.databases`);
 
 console.timeEnd('sqlite-tag-spawned');
+
+const array = sql2array('SELECT * FROM table WHERE value = @value AND age = ${age} LIMIT 1');
+console.assert(
+  JSON.stringify(array) === '["SELECT * FROM table WHERE value = ","value"," AND age = ","age"," LIMIT 1"]',
+  'sql2array does not produces the expected result'
+);
+
+console.assert(array2sql(array, {value: {}, age: {}}) === '', 'invalid values should not pass');
+
+console.assert(
+  array2sql(array, {value: 'test', age: 123}) ===
+  "SELECT * FROM table WHERE value = 'test' AND age = 123 LIMIT 1",
+  'array2sql does not produce the expected result'
+);
 
 close();
 
