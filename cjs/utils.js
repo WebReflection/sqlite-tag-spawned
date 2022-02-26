@@ -14,35 +14,35 @@ exports.error = error;
 const raw = (..._) => asStatic(plain(..._));
 exports.raw = raw;
 
+const quote = /'/g;
+
+const asValue = value => {
+  switch (typeof value) {
+    case 'string':
+      return "'" + value.replace(quote, "''") + "'";
+    case 'number':
+      if (!isFinite(value))
+        return;
+    case 'boolean':
+      return +value;
+    case 'undefined':
+    case 'object':
+      if (!value)
+        return 'NULL';
+      else if (value instanceof Date)
+        return "'" + value.toISOString() + "'";
+  }
+};
+exports.asValue = asValue;
+
 const sql = (rej, _) => {
   const [template, ...values] = asParams(..._);
   const sql = [template[0]];
   for (let i = 0; i < values.length; i++) {
-    const value = values[i];
-    switch (typeof value) {
-      case 'string':
-        sql.push("'" + value.replace(/'/g, "''") + "'");
-        break;
-      case 'number':
-        if (!isFinite(value))
-          return error(rej, 'invalid number ' + value);
-      case 'boolean':
-        sql.push(+value);
-        break;
-      case 'undefined':
-      case 'object':
-        if (!value) {
-          sql.push('NULL');
-          break;
-        }
-        else if (value instanceof Date) {
-          sql.push("'" + value.toISOString() + "'");
-          break;
-        }
-      default:
-        return error(rej, 'incompatible value');
-    }
-    sql.push(template[i + 1]);
+    const value = asValue(values[i]);
+    if (value === void 0)
+      return error(rej, 'incompatible ' + (typeof value) + 'value');
+    sql.push(value, template[i + 1]);
   }
   const query = sql.join('').trim();
   return query.length ? query : error(rej, 'empty query');
