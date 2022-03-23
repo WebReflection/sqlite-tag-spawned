@@ -115,7 +115,7 @@ catch({message}) {
   console.log(' ', message);
 }
 
-const {query: ro} = SQLiteTag('./test/sqlite.db', {readonly: true, timeout: 200});
+const {query: ro} = SQLiteTag('./test/sqlite.db', {readonly: true, timeout: 1000});
 console.log('✔', 'Readonly mode');
 try {
   await ro`INSERT INTO lorem VALUES (${'nope'})`;
