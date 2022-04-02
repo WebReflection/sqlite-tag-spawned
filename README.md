@@ -41,9 +41,21 @@ const list = ['Name 0', 'Name 1'];
 await all`SELECT * FROM names WHERE name IN (${list})`;
 ```
 
+
 ### Differently from dblite
 
   * requires **SQLite 3.33** or higher (it uses the `-json` output mode)
   * each query is a spawn call except for transactions, grouped as single spawned query
   * performance still similar to sqlite3 native module
   * `:memory:` database is based on an always same, yet runtime-once created temporary file, and it requires NodeJS 16+
+
+
+## API: SQLiteTagSpawned(fileName[, options])
+
+While the `fileName` is just a string pointing at the db file or the string `:memory:`, optional options can contain the following fields:
+
+  * `readonly` to run queries in read only mode
+  * `bin` to specify a different `sqlite3` executable
+  * `timeout` to drop the spawned process after *N* milliseconds
+  * `persistent` to open a DB in persistent mode (kept alive spawned command)
+  * `exec` to specify a different way to execute spawned process and results, mostly used for internal purpose
