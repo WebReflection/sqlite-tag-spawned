@@ -14,7 +14,10 @@ exports.error = error;
 const raw = (..._) => asStatic(plain(..._));
 exports.raw = raw;
 
+const {from} = Array;
 const quote = /'/g;
+const hex = x => x.toString(16).padStart(2, '0');
+const x = typed => `x'${from(typed, hex).join('')}'`;
 const asValue = value => {
   switch (typeof value) {
     case 'string':
@@ -26,10 +29,18 @@ const asValue = value => {
       return +value;
     case 'object':
     case 'undefined':
-      if (!value)
-        return 'NULL';
-      else if (value instanceof Date)
-        return "'" + value.toISOString() + "'";
+      switch (true) {
+        case !value:
+          return 'NULL';
+        case value instanceof Date:
+          return "'" + value.toISOString() + "'";
+        case value instanceof Buffer:
+        case value instanceof ArrayBuffer:
+          value = new Uint8Array(value);
+        case value instanceof Uint8Array:
+        case value instanceof Uint8ClampedArray:
+          return x(value);
+      }
   }
 };
 exports.asValue = asValue;

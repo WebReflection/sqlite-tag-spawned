@@ -6,6 +6,21 @@ const {all, get, query, raw, transaction, close} = SQLiteTag('./test/sqlite.db',
 console.time('sqlite-tag-spawned');
 
 console.log('✔', 'table creation');
+await query`CREATE TABLE IF NOT EXISTS bin_data (id INTEGER PRIMARY KEY, data BLOB)`;
+console.log('✔', 'inserting blobs');
+const one_two_three = new Uint8Array([1, 2, 3]);
+await query`INSERT INTO bin_data (data) VALUES (${one_two_three})`;
+await query`INSERT INTO bin_data (data) VALUES (${one_two_three.buffer})`;
+
+const asBuffer = hex => Buffer.from(hex, 'hex');
+const resumed = asBuffer((await get`SELECT hex(data) AS data FROM bin_data`).data);
+console.assert([].join.call(resumed) === [].join.call(one_two_three) && '1,2,3' === [].join.call(one_two_three));
+await query`DELETE FROM bin_data`;
+await query`INSERT INTO bin_data (data) VALUES (${resumed})`;
+const re_resumed = asBuffer((await get`SELECT hex(data) AS data FROM bin_data`).data);
+console.assert([].join.call(re_resumed) === [].join.call(one_two_three));
+console.log('✔', 'getting blobs');
+
 await query`CREATE TABLE IF NOT EXISTS ${raw`lorem`} (info TEXT)`;
 if (!globalThis.DO_NOT_DELETE_FROM)
   await query`DELETE FROM lorem`;
